@@ -1,0 +1,9 @@
+{
+  "name": "com.auto_uncompress.host",
+  "description": "Auto Unzipper Native Messaging Host",
+  "path": "c:\\Users\\owenm\\VSCodeProjects\\AutoUncompress\\programStart.bat",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://cidlolodppkneidgbijpblmnjnobmfjj/"
+  ]
+}

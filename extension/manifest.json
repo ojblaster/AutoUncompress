@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "AutoUncompress",
+  "version": "1.0",
+  "action": {},
+  "description": "Watches downloads and connects to local Python unzipper.",
+  "permissions": [
+    "downloads",
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
