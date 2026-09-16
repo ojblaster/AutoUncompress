@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "default_destination": null,
+  "rules": {
+    "cad.onshape.com": {
+      "unzip": true,
+      "destination": "C:\\Users\\owenm\\3D Objects"
+    }
+  }
+}

@@ -1,7 +1,6 @@
 // Variables
 const hostName = "com.auto_uncompress.host";
 
-
 // Connection checker
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -47,23 +46,25 @@ chrome.downloads.onChanged.addListener((downloadDelta) => {
         if (results && results.length > 0) {
           const item = results[0];
 
-          if (item.filename && item.filename.toLowerCase().endsWith(".zip")) {
-            console.log("Download is a ZIP File...");
+          const extIndex = item.filename.lastIndexOf(".");
+          const fileExtension = extIndex !== -1 ? item.filename.slice(extIndex).toLowerCase() : "";
 
-            let payload = {
-              action: "unzip",
-              filePath: item.filename,
-              url: new URL(item.url || item.finalUrl).origin
-            };
+          let payload = {
+            action: "evaluate",
+            filePath: item.filename,
+            url: new URL(item.url || item.finalUrl).origin,
+            fileType: fileExtension
+          };
 
-            chrome.runtime.sendNativeMessage(hostName, payload, (response) => {
-              if (chrome.runtime.lastError) {
-                console.error("Native Messaging Error: " + chrome.runtime.lastError.message);
-              } else {
-                console.log("Result:", response);
-              }
-            });
-          }
+          console.log(payload);
+
+          chrome.runtime.sendNativeMessage(hostName, payload, (response) => {
+            if (chrome.runtime.lastError) {
+              console.error("Native Messaging Error: " + chrome.runtime.lastError.message);
+            } else {
+              console.log("Result:", response);
+            }
+          });
         }
       });
     });
