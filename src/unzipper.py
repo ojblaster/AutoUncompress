@@ -1,15 +1,24 @@
 import os
 import zipfile
-def renamePath(a):
-  originalDir = a
+def renamePath(filePath:str):
   count = 1
-  while os.path.exists(a):
-    a = f"{originalDir} ({count})"
-    count += 1
-  return a
+  if os.path.isdir(filePath):
+    originalPath = filePath
+    while os.path.exists(filePath):
+      filePath = f"{originalPath} ({count})"
+      count += 1
+    return filePath
+  
+  else:
+    base, ext = os.path.splitext(filePath)
+    newPath = filePath
+    while os.path.exists(newPath):
+      newPath = f"{base} ({count}){ext}"
+      count += 1
+    return newPath
 
 def unzip(zipPath: str, targetDir: str) -> tuple[bool, str]:
-  if not os.path.exists(zipPath) or not zipfile.is_zipfile(zipPath):
+  if not os.path.exists(zipPath) or not zipfile.is_zipfile(zipPath) or not os.path.isdir(targetDir):
     return False, ""
 
   try:
@@ -28,22 +37,13 @@ def unzip(zipPath: str, targetDir: str) -> tuple[bool, str]:
   except Exception:
     return False, ""
 
-def renameMovingFilePath(filePath: str) -> str:
-    base, ext = os.path.splitext(filePath)
-    count = 1
-    newPath = filePath
-    while os.path.exists(newPath):
-        newPath = f"{base} ({count}){ext}"
-        count += 1
-    return newPath
-
 def move(filePath: str, targetDir: str) -> tuple[bool, str]:
-    if not os.path.isfile(filePath) or not os.path.isdir(targetDir):
+    if not os.path.exists(filePath) or not os.path.isdir(targetDir):
         return False, ""
 
     try:
         targetPath = os.path.join(targetDir, os.path.basename(filePath))
-        targetPath = renameMovingFilePath(targetPath)
+        targetPath = renamePath(targetPath)
 
         os.rename(filePath, targetPath)
         return True, targetPath

@@ -6,7 +6,23 @@ import json
 from src.notifier import sendNotification
 from src.unzipper import unzip, move
 from src.communicator import read, write
-from src.configManager import evalDownload
+from src.configManager import readData
+
+def writeChrome(status, fileType=None, filePath=None):
+  workingTable = {}
+  if status: workingTable["status"] = status
+  if fileType: workingTable["fileType"] = fileType
+  if filePath: workingTable["filePath"] = filePath
+
+  write(json.dumps(workingTable))
+
+def getPretty(path):
+  realName = os.path.splitext(os.path.basename(path))[0]
+  realDir = os.path.splitext(os.path.basename(os.path.dirname(path)))[0]
+  return realName, realDir
+
+class CleanExit(Exception):
+  pass
 
 # Communicating with chrome extension.
 try:
@@ -17,45 +33,43 @@ try:
 
     # Chrome extension has pinged native to test for a connection.
     if incomingMessage.get("action") == "ping":
-      write(json.dumps({"status": "connected"}))
+      writeChrome("connected")
+      raise CleanExit
 
     # Chrome extension needs to evaluate a file. (Standard)
     elif incomingMessage.get("action") == "evaluate":
-      filePath = incomingMessage.get("filePath")
-      url = incomingMessage.get("url")
-      fileType = incomingMessage.get("fileType")
-      fileName = os.path.splitext(os.path.basename(filePath))[0]
+      filePath:str = incomingMessage.get("filePath")
+      url:str = incomingMessage.get("url")
+      fileType:str = incomingMessage.get("fileType")
 
-      readSuccess, readError, fileDestination, unzipRule = evalDownload(url, filePath)
-      if readSuccess:
-        if unzipRule and fileType == ".zip":
-          success, realPath = unzip(filePath, fileDestination)
-          if success:
-            realName = os.path.splitext(os.path.basename(realPath))[0]
-            realDir = os.path.splitext(os.path.basename(os.path.dirname(realPath)))[0]
-            sendNotification("Evaluation Complete", f'File "{realName}" from "{url}" successfully moved and unzipped to {realDir}".')
-            write(json.dumps({"status": "Evaluation complete"}))
-          else:
-            sendNotification("Evaluation Failed", f'File "{fileName}" from "{url}" has encountered an error!')
-            write(json.dumps({"status": "Evaluation failed"}))
-
+      readSuccess, unzipRule, fileDestination = readData(url, filePath, fileType)
+      if not readSuccess:
+        writeChrome("read fail")
+        raise CleanExit
+      #Zip file and we want to unzip
+      if unzipRule and fileType == ".zip":
+        success, realPath = unzip(filePath, fileDestination)
+        if success:
+          realName, realDir = getPretty(realPath)
+          writeChrome("complete", fileType, realPath)
         else:
-          success, realPath = move(filePath, fileDestination)
-          if success:
-            realName = os.path.splitext(os.path.basename(realPath))[0]
-            realDir = os.path.splitext(os.path.basename(os.path.dirname(realPath)))[0]
-            sendNotification("Evaluation Complete", f'File "{realName}" from "{url}" successfully moved to {realDir}".')
-            write(json.dumps({"status": "Evaluation complete"}))
-          else:
-            sendNotification("Evaluation Failed", f'File "{fileName}" from "{url}" has encountered an error!')
-            write(json.dumps({"status": "Evaluation failed"}))
-              
+          writeChrome("failed")
+
+      #Not a zip file or we just dont want to unzip it
       else:
-          write(json.dumps({"status": f"{readError}"}))
+        success, realPath = move(filePath, fileDestination)
+        if success:
+          realName, realDir = getPretty(realPath)
+          writeChrome("complete", fileType, realPath)
+        else:
+          writeChrome("failed")
     else:
-        write(json.dumps({"status": "URL mismatch"}))
+      writeChrome("unhandled action")
   else:
-      write(json.dumps("unhandeled action recieved, skipping."))
+    raise Exception
+
+except CleanExit:
+  pass
 
 except Exception:
   sys.exit(1)

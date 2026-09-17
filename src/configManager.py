@@ -8,7 +8,10 @@ defaultConfig = {
     "rules": {
         "cad.onshape.com": {
             "unzip": True,
-            "destination": None
+            "destination": None,
+            "fileDests": {
+                ".stl": "ofl"
+            }
         }
     }
 }
@@ -26,18 +29,31 @@ def loadConfig():
         with open(configPath, "r", encoding="utf-8") as f:
             return json.load(f)
 
-def evalDownload(url, originFilePath) -> tuple[bool, str, str, bool]:
+def getDestination(file, rules:dict, fileType):
+    dest = rules.get("destination")
+    orginDir = os.path.dirname(file)
+    fileTypes:dict = rules.get("fileTypes", {})
+    destForType = fileTypes.get(fileType)
+
+    if destForType: dest = destForType
+
+    if not dest or dest == "ofl" or not os.path.exists(dest):
+        return orginDir
+    else: return dest
+
+def readData(url, originFilePath, fileType) -> tuple[bool, bool, str]:
     config = loadConfig()
-    domain = urlparse(url).netloc
-    rules = config.get("rules", {}).get(domain)
+    domain:str = urlparse(url).netloc
+    rules:dict = config.get("rules", {}).get(domain)
 
     if not rules:
-        return False, "Rules do not exist for domain", None, False
-    
-    unzip = rules.get("unzip", {}) or False
- 
-    destination = (rules.get("destination") or config.get("default_destination")) or None
-    if destination == "origin file location" or not destination or not os.path.exists(destination):
-        destination = os.path.dirname(originFilePath)
+        return False, False, None
+    try:
+        unzip = rules.get("unzip", False)
 
-    return True, "Evaluated Successfully.", destination, unzip
+        destination = rules.get("destination")
+    
+        destination = getDestination(originFilePath, rules, fileType)
+        return True, unzip, destination
+    except:
+        return False, False, None
