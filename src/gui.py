@@ -3,6 +3,7 @@ from PIL import Image, ImageTk
 import ctypes
 import webbrowser
 import os
+from configManager import loadConfig
 
 try:
     myappid = 'ChromeAutoRoute' 
@@ -15,6 +16,9 @@ app = ctk.CTk()
 app.geometry("1200x800")
 app.title("Chrome AutoRoute")
 app.minsize(800, 500)
+
+config = loadConfig()
+domains = config.get("rules", {})
 
 #Customization
 version = "1.0.0"
@@ -67,6 +71,10 @@ mainPage = ctk.CTkFrame(app, fg_color="transparent", corner_radius=0); mainPage.
 urlRulesButton = ctk.CTkButton(mainPage, font=fontN, command=lambda: openPage(urlRules), fg_color=buttonColor, hover_color=buttonHoverColor, text="URL Rules", border_width=3, border_color="Black"); urlRulesButton.pack(fill = "both", padx=10, pady=10, expand=True)
 
 urlRules = ctk.CTkFrame(app, fg_color="transparent", corner_radius=0); urlRules.name = "URL Rules"
+def loadURLRules():
+    for domain in domains:
+        domainButton = ctk.CTkButton(urlRules, font=fontN, command=lambda: print("opening url rule..."), fg_color=buttonColor, hover_color=buttonHoverColor, text=str(domain), border_width=3, border_color="Black"); domainButton.pack(fill = "both", padx=10, pady=10, expand=True)
+        unzip = domain.getattr()
 
 pageDirectory = []
 def updateDirectory():
@@ -105,4 +113,6 @@ def openPage(frame):
     else: print("already on page")
 
 openPage(mainPage)
+loadURLRules()
+print(domains)
 app.mainloop()
