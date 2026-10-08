@@ -70,11 +70,15 @@ seperator1.pack(side="top", fill="both")
 mainPage = ctk.CTkFrame(app, fg_color="transparent", corner_radius=0); mainPage.name = "Main Page"
 urlRulesButton = ctk.CTkButton(mainPage, font=fontN, command=lambda: openPage(urlRules), fg_color=buttonColor, hover_color=buttonHoverColor, text="URL Rules", border_width=3, border_color="Black"); urlRulesButton.pack(fill = "both", padx=10, pady=10, expand=True)
 
-urlRules = ctk.CTkFrame(app, fg_color="transparent", corner_radius=0); urlRules.name = "URL Rules"
+urlRules = ctk.CTkScrollableFrame(app, fg_color="transparent", corner_radius=0); urlRules.name = "URL Rules"
 def loadURLRules():
-    for domain in domains:
-        domainButton = ctk.CTkButton(urlRules, font=fontN, command=lambda: print("opening url rule..."), fg_color=buttonColor, hover_color=buttonHoverColor, text=str(domain), border_width=3, border_color="Black"); domainButton.pack(fill = "both", padx=10, pady=10, expand=True)
-        unzip = domain.getattr()
+    for name, details in domains.items():
+        domainSpecific = ctk.CTkFrame(app, fg_color="transparent", corner_radius=0); domainSpecific.name = name
+        domainButton = ctk.CTkButton(urlRules, font=fontN, command=lambda p=domainSpecific: openPage(p), fg_color=buttonColor, hover_color=buttonHoverColor, text=name, border_width=3, border_color="Black"); domainButton.pack(fill = "both", padx=10, pady=10)
+        
+        domainTitle = ctk.CTkLabel(domainSpecific, text=name, font=fontL); domainTitle.pack(side="top", pady = 5, padx = 5)
+        seperator2 = ctk.CTkFrame(domainSpecific, fg_color="White", height=4, corner_radius=2); seperator2.pack(side="top", fill="x", padx=10)
+        unzipButton = ctk.CTkCheckBox(domainSpecific, text="Unzip any .zip files?", font=fontN, fg_color=redColor, hover_color=redHoverColor); unzipButton.pack(pady=5, side="top")
 
 pageDirectory = []
 def updateDirectory():
